@@ -1,2 +1,2 @@
 # novum-push-authorization
-service and agent for the push-authorization flow generated in the OB
+service and agent in Novum for handling the push-authorization flow generated in the OB
