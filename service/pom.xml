@@ -5,7 +5,7 @@
     <version>0.0.1-SNAPSHOT</version>
     <packaging>war</packaging>
 
-    <name>Auth Question Agent</name>
+    <name>Auth Question Service</name>
 
     <parent>
         <groupId>com.tuenti.services</groupId>
@@ -99,11 +99,6 @@
                         </server>
                     </servers>
                     <clients>
-                        <client>
-                            <idl>${project.basedir}/../AuthQuestionService.v1.idl.java</idl>
-                            <packageName>${package.base}</packageName>
-                            <fullPackageFlag>true</fullPackageFlag>
-                        </client>
                         <client>
                             <idl>https://artifacts.tuenti.io/idl/CommsToolSender.v1/CommsToolSender.v1.3.idl.java</idl>
                         </client>

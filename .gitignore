@@ -1,0 +1,13 @@
+.idea/
+atlassian-ide-plugin.xml
+target/
+*.iml
+.classpath
+.project
+.settings
+git
+*.ipr
+*.iws
+bin/
+.checkstyle
+*.log

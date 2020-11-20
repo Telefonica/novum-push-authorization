@@ -100,7 +100,7 @@
                     </servers>
                     <clients>
                         <client>
-                            <idl>${project.basedir}/../AuthQuestionService.v1.idl.java</idl>
+                            <idl>${project.basedir}/../service/AuthQuestionService.v1.idl.java</idl>
                             <packageName>${package.base}.client</packageName>
                             <fullPackageFlag>true</fullPackageFlag>
                         </client>
