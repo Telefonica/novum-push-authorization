@@ -1,0 +1,25 @@
+version: '3'
+
+services:
+  xconfig:
+    image: "docker.tuenti.io/services/xconfig-daemon:0.9.5"
+    volumes:
+    - "xconfig:/var/xconfig"
+      # Needed for tests running against specific dirs in src/test/resources
+    - "./:/source"
+
+  memcached:
+    image: "memcached:1.5.0"
+
+  builder:
+    image: "docker.tuenti.io/service-inf/java8-builder:7.1"
+    volumes:
+    - "xconfig:/var/xconfig"
+    - "./:/source"
+    - "/var/run/docker.sock:/var/run/docker.sock"
+    - "mvn-repository:/maven-repository:rw"
+    depends_on: [memcached, xconfig]
+
+volumes:
+  mvn-repository: {}
+  xconfig: {}

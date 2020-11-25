@@ -1,0 +1,62 @@
+#If something is changed in this file we should comment it to Lifecycle team regarding release and integration processes
+version: 2
+
+parameters:
+  DOCKER_SOCK_FILE: "/var/run/docker-jenkins.sock"
+
+defaults:
+  platform: "docker"
+
+  plugins:
+    mail:
+      enabled: true
+      recipients:
+        - "franj@tuenti.com"
+
+workflows:
+  preintegration_fast:
+    stages: [env_up, all_build]
+  preintegration:
+    stages: [env_up, all_clean, all_build]
+  service_snapshot:
+    stages: [env_up, service_build_snapshot, service_publish_snapshot]
+  agent_snapshot:
+    stages: [env_up, agent_build_snapshot, agent_publish_snapshot]
+  service_release:
+    stages: [env_up, all_clean, all_build, service_publish]
+    plugins:
+      versioning:
+        enabled: true
+        get_version: "mvn -f service-parent/pom.xml -B -q com.tuenti.maven.plugins:tuentiversions-maven-plugin:show-current"
+        set_current_release_version: "mvn -f service-parent/pom.xml -B com.tuenti.maven.plugins:tuentiversions-maven-plugin:set-release"
+        set_next_development_version: "mvn -f service-parent/pom.xml -B com.tuenti.maven.plugins:tuentiversions-maven-plugin:set-next-devel"
+  agent_release:
+    stages: [env_up, all_clean, all_build, agent_publish]
+    plugins:
+      versioning:
+        enabled: true
+        get_version: "mvn -f agent/pom.xml -B -q com.tuenti.maven.plugins:tuentiversions-maven-plugin:show-current"
+        set_current_release_version: "mvn -f agent/pom.xml -B com.tuenti.maven.plugins:tuentiversions-maven-plugin:set-release"
+        set_next_development_version: "mvn -f agent/pom.xml -B com.tuenti.maven.plugins:tuentiversions-maven-plugin:set-next-devel"
+  nightly:
+    stages: [env_up, all_clean, all_build]
+    plugins:
+      nightly:
+
+stages:
+  env_up: ["docker-compose up -d"]
+  all_clean: ["docker-compose exec -T builder mvn -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn clean"]
+  service_clean: ["docker-compose exec -T builder mvn -f service-parent/pom.xml -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn clean"]
+  agent_clean: ["docker-compose exec -T builder mvn -f agent/pom.xml -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn clean"]
+  all_build:
+    - "docker-compose exec -T builder mvn -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn install -DdockerImageTags=acceptance"
+  service_build: ["docker-compose exec -T builder mvn -f service-parent/pom.xml -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn install"]
+  agent_build: ["docker-compose exec -T builder mvn -f agent/pom.xml -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn install"]
+  service_build_snapshot: ["docker-compose exec -T builder mvn -f service-parent/pom.xml -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn install -Dmaven.test.skip=true -DskipDetekt=true -Dktlint.skip=true -Ddocker.tag=`docker-compose exec -T builder mvn -f service-parent/pom.xml -B -q com.tuenti.maven.plugins:tuentiversions-maven-plugin:show-current`-`git rev-parse --short HEAD`"]
+  agent_build_snapshot: ["docker-compose exec -T builder mvn -f agent/pom.xml -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn install -Dmaven.test.skip=true -DskipDetekt=true -Dktlint.skip=true -Ddocker.tag=`docker-compose exec -T builder mvn -f agent/pom.xml -B -q com.tuenti.maven.plugins:tuentiversions-maven-plugin:show-current`-`git rev-parse --short HEAD`"]
+  service_publish: ["docker-compose exec -T builder mvn -f service/pom.xml -B docker:push"]
+  agent_publish: ["docker-compose exec -T builder mvn -f agent/pom.xml -B docker:push"]
+  service_publish_snapshot: ["docker-compose exec -T builder mvn -f service/pom.xml -B docker:push -Ddocker.tag=`docker-compose exec -T builder mvn -f service-parent/pom.xml -B -q com.tuenti.maven.plugins:tuentiversions-maven-plugin:show-current`-`git rev-parse --short HEAD`"]
+  agent_publish_snapshot: ["docker-compose exec -T builder mvn -f agent/pom.xml -B docker:push -Ddocker.tag=`docker-compose exec -T builder mvn -f agent/pom.xml -B -q com.tuenti.maven.plugins:tuentiversions-maven-plugin:show-current`-`git rev-parse --short HEAD`"]
+  service_snapshot_version: ["docker-compose exec -T builder mvn -f service-parent/pom.xml -B -q com.tuenti.maven.plugins:tuentiversions-maven-plugin:set-custom -Dv=`docker-compose exec -T builder mvn -f service-parent/pom.xml -B -q com.tuenti.maven.plugins:tuentiversions-maven-plugin:show-current`-`git rev-parse --short=6 HEAD`"]
+  agent_snapshot_version: ["docker-compose exec -T builder mvn -f agent/pom.xml -B -q com.tuenti.maven.plugins:tuentiversions-maven-plugin:set-custom -Dv=`docker-compose exec -T builder mvn -f agent/pom.xml -B -q com.tuenti.maven.plugins:tuentiversions-maven-plugin:show-current`-`git rev-parse --short=6 HEAD`"]
