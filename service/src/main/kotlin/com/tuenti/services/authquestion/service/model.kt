@@ -10,8 +10,9 @@ data class UserQuestionRequestEvent (
         val maxAge: Int,
         val expirationDateTimestamp: Long,
         val notificationEventId: String,
-        val creationDate: Long,
-        val userId: String
+        val creationDateTimestamp: Long,
+        val userId4p: String?,
+        val msisdn: String?
 )
 
 data class UserQuestionResponseEvent (
@@ -20,6 +21,7 @@ data class UserQuestionResponseEvent (
         val amr: String,
         val responseType: String,
         val notificationEventId: String,
-        val creationDate: Long,
-        val userId: String
+        val creationDateTimestamp: Long,
+        val userId4p: String?,
+        val msisdn: String?
 )
